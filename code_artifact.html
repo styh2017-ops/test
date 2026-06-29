@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동적 평형(압력 변화) 가상 실험실</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts (Noto Sans KR) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;950&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      background: #4f46e5;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- 헤더 영역 -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 text-white p-2 rounded-xl">
+          <i data-lucide="beaker" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-lg font-bold tracking-tight text-slate-900 block leading-none">동적 평형 가상 실험실</span>
+          <span class="text-xs text-indigo-600 font-semibold">2022 개정 교육과정 [연화] 수업 보조 도구</span>
+        </div>
+      </div>
+      <div class="bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-xs font-semibold text-indigo-900">물질의 세 가지 상태와 동적 평형</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 레이아웃 -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- 왼쪽 사이드바: 교사용 수업 안내 및 대시보드 컨트롤 (5/12) -->
+    <div class="lg:col-span-5 space-y-6 flex flex-col">
+      
+      <!-- 핵심 이론 요약 카드 -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center space-x-2 text-indigo-600">
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+          <h2 class="text-base font-bold">핵심 개념 가이드 (교사용)</h2>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          밀폐된 실린더 내부에서 일어나는 <strong>액체 $\rightleftharpoons$ 기체 상평형</strong> 모델입니다. 온도가 일정할 때 
+          <span class="text-emerald-600 font-semibold">증발 속도</span>는 항상 일정하지만, 
+          <span class="text-rose-500 font-semibold">응축 속도</span>는 기체의 단위 부피당 입자 수(밀도/압력)에 비례합니다.
+        </p>
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-xs space-y-2 text-slate-500">
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-indigo-600">1. 부피 감소 (압력 증가):</span>
+            <span>순간적으로 밀도가 증가해 응축 속도가 급증하며, 기체 입자수가 감소해 새로운 평형에 도달합니다.</span>
+          </div>
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-indigo-600">2. 부피 증가 (압력 감소):</span>
+            <span>순간적으로 밀도가 감소해 응축 속도가 급감하며, 증발이 우세해져 기체 입자가 다시 늘어납니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 컨트롤러 카드 -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-6">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+          <i data-lucide="sliders" class="w-4 h-4 text-slate-500"></i>
+          <span>실험 매개변수 제어</span>
+        </h3>
+
+        <!-- 부피(피스톤 높이) 슬라이더 -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-sm">
+            <span class="font-semibold text-slate-700">실린더 부피 ($V$)</span>
+            <span class="text-xs font-mono bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-bold" id="volume-val">100%</span>
+          </div>
+          <input type="range" id="volume-slider" min="40" max="150" value="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+          <div class="flex justify-between text-[10px] text-slate-400">
+            <span>최소 부피 (고압)</span>
+            <span>최대 부피 (저압)</span>
+          </div>
+        </div>
+
+        <!-- 온도 슬라이더 -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-sm">
+            <span class="font-semibold text-slate-700">계의 온도 ($T$) <span class="text-[11px] font-normal text-slate-400">(증발 속도 결정)</span></span>
+            <span class="text-xs font-mono bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold" id="temp-val">25 °C</span>
+          </div>
+          <input type="range" id="temp-slider" min="10" max="80" value="25" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+        </div>
+
+        <!-- 퀵 세팅 수업 시나리오 -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+          <span class="text-xs font-bold text-slate-400 block uppercase tracking-wider">추천 수업 시나리오 버튼</span>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="applyScenario('compress')" class="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition-all border border-indigo-100/50 flex items-center justify-center space-x-1">
+              <i data-lucide="chevrons-down" class="w-3.5 h-3.5"></i>
+              <span>부피 급격히 압축</span>
+            </button>
+            <button onclick="applyScenario('expand')" class="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition-all border border-indigo-100/50 flex items-center justify-center space-x-1">
+              <i data-lucide="chevrons-up" class="w-3.5 h-3.5"></i>
+              <span>부피 급격히 팽창</span>
+            </button>
+            <button onclick="applyScenario('heat')" class="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl transition-all border border-amber-100/50 flex items-center justify-center space-x-1">
+              <i data-lucide="thermometer" class="w-3.5 h-3.5"></i>
+              <span>계의 온도 급상승</span>
+            </button>
+            <button onclick="resetSimulation()" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>초기화 (진공 상태)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 실시간 정량 대시보드 -->
+      <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-xl space-y-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+          <span>실시간 정량 분석 창</span>
+        </h3>
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/50 text-center">
+            <span class="block text-[10px] text-slate-400 font-medium mb-1">기체 입자수 ($N$)</span>
+            <span class="text-xl font-black text-indigo-400 font-mono" id="gas-count-display">0</span>
+          </div>
+          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/50 text-center">
+            <span class="block text-[10px] text-slate-400 font-medium mb-1">기체 밀도 ($N/V$)</span>
+            <span class="text-xl font-black text-amber-400 font-mono" id="density-display">0.00</span>
+          </div>
+          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/50 text-center">
+            <span class="block text-[10px] text-slate-400 font-medium mb-1">액체 입자수</span>
+            <span class="text-xl font-black text-blue-400 font-mono" id="liquid-count-display">300</span>
+          </div>
+        </div>
+        
+        <!-- 실시간 상태 진단 뱃지 -->
+        <div class="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-300 font-medium">현재 상태</span>
+          <span id="status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            동적 평형 상태
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽 영역: 분자 운동 가상 시뮬레이터 & 그래프 (7/12) -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- 실린더 시뮬레이션 캔버스 -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm relative flex flex-col items-center">
+        <div class="w-full flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+            <i data-lucide="eye" class="w-4 h-4 text-indigo-500"></i>
+            <span>실린더 내부 분자 운동 모형</span>
+          </h3>
+          <span class="text-xs text-slate-400 flex items-center space-x-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+            <span>수증기 입자</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500/50 inline-block ml-2"></span>
+            <span>액체(물)</span>
+          </span>
+        </div>
+
+        <!-- 실린더 캔버스 영역 -->
+        <div class="relative w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex justify-center py-4">
+          <canvas id="simulation-canvas" class="max-w-full block" width="460" height="380"></canvas>
+          
+          <!-- 일시정지 및 속도 제어 인터페이스 오버레이 -->
+          <div class="absolute bottom-4 right-4 flex space-x-1 bg-slate-900/80 backdrop-blur border border-slate-700/50 p-1 rounded-xl">
+            <button onclick="togglePlay()" id="play-btn" class="p-2 text-slate-300 hover:text-white rounded-lg transition-all" title="재생/일시정지">
+              <i data-lucide="pause" class="w-4 h-4"></i>
+            </button>
+            <button onclick="simulationStep()" class="p-2 text-slate-300 hover:text-white rounded-lg transition-all" title="1프레임 전진">
+              <i data-lucide="skip-forward" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 증발 및 응축 반응 속도 실시간 그래프 -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+            <i data-lucide="trending-up" class="w-4 h-4 text-indigo-500"></i>
+            <span>시간에 따른 반응 속도 그래프</span>
+          </h3>
+          <div class="flex items-center space-x-3 text-xs">
+            <span class="flex items-center space-x-1 font-semibold text-emerald-600">
+              <span class="w-3 h-0.5 bg-emerald-500 inline-block"></span>
+              <span>증발 속도</span>
+            </span>
+            <span class="flex items-center space-x-1 font-semibold text-rose-500">
+              <span class="w-3 h-0.5 bg-rose-500 inline-block"></span>
+              <span>응축 속도</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 그래프 캔버스 영역 -->
+        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3">
+          <canvas id="graph-canvas" class="w-full" width="600" height="160"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 푸터 및 출처 안내 -->
+  <footer class="bg-white border-t border-slate-100 py-6 mt-12 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-6">
+      <p class="font-semibold text-slate-500 mb-1">🏫 교실 수업 활용 팁</p>
+      <p>피스톤을 아래로 내리면 순간적으로 기체의 밀도가 증가해 응축 속도가 급상승하며, 그래프에서 빨간색 응축 선이 녹색 증발 선 위로 솟구쳤다가 시간이 흐르며 다시 만나는 것을 시각적으로 강조하세요.</p>
+    </div>
+  </footer>
+
+  <!-- 알림 메시지 토스트 레이아웃 -->
+  <div id="toast-message" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-950 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-sm">
+    <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
+    <span id="toast-text">메시지 내용</span>
+  </div>
+
+  <script>
+    // --- 글로벌 상태 설정 ---
+    let isPlaying = true;
+    let volumePercent = 100; // 40% ~ 150%
+    let temperature = 25;    // 10C ~ 80C
+    
+    // 입자 데이터 베이스
+    let gasParticles = [];
+    let liquidParticlesCount = 300; 
+    let evaporationConstant = 0.05; // 온도에 비례
+    
+    // 유동적인 증발 & 응축 카운터 (그래프 데이터용 실시간 속도 계산)
+    let evapHistory = [];
+    let condHistory = [];
+    let graphData = [];
+    const maxGraphHistory = 150;
+
+    // 이벤트 애니메이션 카운트 (화살표 시각화)
+    let arrows = [];
+
+    // 캔버스 객체
+    let simCanvas, simCtx;
+    let graphCanvas, graphCtx;
+
+    window.onload = function() {
+      lucide.createIcons();
+      
+      simCanvas = document.getElementById('simulation-canvas');
+      simCtx = simCanvas.getContext('2d');
+      graphCanvas = document.getElementById('graph-canvas');
+      graphCtx = graphCanvas.getContext('2d');
+
+      // 슬라이더 바인딩
+      const volSlider = document.getElementById('volume-slider');
+      volSlider.addEventListener('input', function(e) {
+        volumePercent = parseInt(e.target.value);
+        document.getElementById('volume-val').innerText = `${volumePercent}%`;
+      });
+
+      const tempSlider = document.getElementById('temp-slider');
+      tempSlider.addEventListener('input', function(e) {
+        temperature = parseInt(e.target.value);
+        document.getElementById('temp-val').innerText = `${temperature} °C`;
+      });
+
+      // 기체 입자 초기 분포 주입 (평형 상태 근처로 시작)
+      initParticles();
+
+      // 무한 루프 시작
+      requestAnimationFrame(mainLoop);
+    };
+
+    // 입자 초기화
+    function initParticles() {
+      gasParticles = [];
+      // 25도, 100% 부피 기준 이상적인 평형 기체 수 대략 40개 설정
+      const targetCount = Math.floor(temperature * 1.5);
+      for(let i=0; i < targetCount; i++) {
+        spawnGasParticle();
+      }
+      
+      // 그래프 히스토리 초기화
+      graphData = [];
+      for (let i = 0; i < maxGraphHistory; i++) {
+        graphData.push({ evap: getEvapRate(), cond: getEvapRate() }); // 처음엔 평형
+      }
+    }
+
+    // 기체 입자 스폰 (액체 표면 위쪽 빈공간 무작위)
+    function spawnGasParticle() {
+      const pistonY = getPistonY();
+      const liquidY = getLiquidY();
+      const width = simCanvas.width;
+      
+      gasParticles.push({
+        x: Math.random() * (width - 60) + 30,
+        y: Math.random() * (liquidY - pistonY - 20) + pistonY + 10,
+        vx: (Math.random() - 0.5) * getSpeedFactor(),
+        vy: (Math.random() - 0.5) * getSpeedFactor(),
+        radius: 4,
+        color: '#6366f1' // Indigo
+      });
+    }
+
+    // 온도에 따른 속력 결정 (이상 기체 속력 계수)
+    function getSpeedFactor() {
+      return Math.sqrt(temperature) * 0.7 + 1.5;
+    }
+
+    // 부피 슬라이더 값에 따른 피스톤의 Y 절대 좌표 계산
+    function getPistonY() {
+      // 슬라이더가 40이면 아래로 수축(높이 220), 150이면 위로 팽창(높이 50)
+      // 피스톤 가동 범위: 40 ~ 250 px
+      const maxPistonY = 220; // 좁은 부피
+      const minPistonY = 50;  // 넓은 부피
+      const ratio = (volumePercent - 40) / (150 - 40); // 0 ~ 1
+      return maxPistonY - (ratio * (maxPistonY - minPistonY));
+    }
+
+    // 항상 고정된 액체 수면 Y 좌표
+    function getLiquidY() {
+      return 290;
+    }
+
+    // 온도에 비례하는 가상의 증발 속도 수치
+    function getEvapRate() {
+      return temperature * 0.12; 
+    }
+
+    // 기체 밀도 및 기하학적 충돌 확률에 따른 가상 응축 속도 수치
+    function getCondRate() {
+      if (gasParticles.length === 0) return 0;
+      const volume = getVolumeArea();
+      // 밀도 (N/V)가 높을수록 응축 빈도가 높아짐
+      return (gasParticles.length / volume) * 350 * (getSpeedFactor() * 0.6);
+    }
+
+    // 가상의 기체 수용 면적 (부피 지표)
+    function getVolumeArea() {
+      return getLiquidY() - getPistonY();
+    }
+
+    // --- 시나리오 단축키 로직 ---
+    function applyScenario(type) {
+      if (type === 'compress') {
+        // 순간 부피 급감
+        volumePercent = 45;
+        document.getElementById('volume-slider').value = 45;
+        document.getElementById('volume-val').innerText = '45%';
+        showToast("피스톤을 세게 눌렀습니다! 기체 밀도 급상승 ⬆️");
+      } 
+      else if (type === 'expand') {
+        // 순간 부피 증가
+        volumePercent = 145;
+        document.getElementById('volume-slider').value = 145;
+        document.getElementById('volume-val').innerText = '145%';
+        showToast("피스톤을 위로 당겼습니다! 기체 밀도 급강하 ⬇️");
+      }
+      else if (type === 'heat') {
+        temperature = 75;
+        document.getElementById('temp-slider').value = 75;
+        document.getElementById('temp-val').innerText = '75 °C';
+        showToast("계의 온도가 급상승했습니다! 분자 운동 속도 증가 🔥");
+      }
+    }
+
+    function resetSimulation() {
+      gasParticles = [];
+      initParticles();
+      showToast("기체 입자를 모두 비우고 초기화했습니다.");
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const playBtn = document.getElementById('play-btn');
+      if (isPlaying) {
+        playBtn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i>`;
+        showToast("시뮬레이션이 재개되었습니다.");
+      } else {
+        playBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>`;
+        showToast("일시정지되었습니다.");
+      }
+      lucide.createIcons();
+    }
+
+    function simulationStep() {
+      if (!isPlaying) {
+        updatePhysics();
+        drawAll();
+      }
+    }
+
+    // 알림용 토스트
+    function showToast(message) {
+      const toast = document.getElementById('toast-message');
+      const toastText = document.getElementById('toast-text');
+      
+      toastText.innerText = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // --- 시뮬레이션 물리 핵심 루프 ---
+    function mainLoop() {
+      if (isPlaying) {
+        updatePhysics();
+        drawAll();
+      }
+      requestAnimationFrame(mainLoop);
+    }
+
+    function updatePhysics() {
+      const pistonY = getPistonY();
+      const liquidY = getLiquidY();
+      const speed = getSpeedFactor();
+
+      // 1. 기체 입자 운동 및 반사 벽처리
+      gasParticles.forEach((p, idx) => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // 벽 충돌 (좌우)
+        if (p.x - p.radius < 30) {
+          p.x = 30 + p.radius;
+          p.vx *= -1;
+        }
+        if (p.x + p.radius > simCanvas.width - 30) {
+          p.x = simCanvas.width - 30 - p.radius;
+          p.vx *= -1;
+        }
+
+        // 피스톤 충돌 (상단) - 실시간 피스톤 작동에 찌그러지지 않게 방어 코드 포함
+        if (p.y - p.radius < pistonY) {
+          p.y = pistonY + p.radius;
+          p.vy = Math.abs(p.vy); // 아래로 튕김
+        }
+
+        // 액체 수면 충돌 처리 (하단) -> 높은 확률로 탈출, 일부는 응축 처리
+        if (p.y + p.radius >= liquidY) {
+          // 기체가 액체 수면에 들어왔을 때 -> '응축' 판정 (Stickiness 확률)
+          // 실제 열역학적 평형에 맞게 일정 확률로 기체에서 제거하고 물 분자로 반환
+          const condensationProbability = 0.15 * (speed * 0.5); // 온도/속도에 영향
+          if (Math.random() < condensationProbability) {
+            // 응축 발생!
+            arrows.push({ x: p.x, y: liquidY, type: 'condense', opacity: 1.0 });
+            gasParticles.splice(idx, 1);
+            liquidParticlesCount++;
+          } else {
+            // 표면 탄성 충돌 (튀어나감)
+            p.y = liquidY - p.radius;
+            p.vy = -Math.abs(p.vy);
+          }
+        }
+      });
+
+      // 2. 액체 표면에서의 증발 프로세스 (확률적 방출)
+      // 온도가 높을수록 초당 증발 빈도가 증가함
+      const evaporationProbability = getEvapRate() * 0.007;
+      if (Math.random() < evaporationProbability) {
+        // 증발 발생!
+        const spawnX = Math.random() * (simCanvas.width - 70) + 35;
+        gasParticles.push({
+          x: spawnX,
+          y: liquidY - 5,
+          vx: (Math.random() - 0.5) * speed,
+          vy: -Math.abs((Math.random() * 0.5 + 0.5) * speed), // 무조건 위로 방출
+          radius: 4,
+          color: '#34d399' // 초록색(방금 증발한 흥분 상태 표시 후 인디고로 변화)
+        });
+        arrows.push({ x: spawnX, y: liquidY - 10, type: 'evaporate', opacity: 1.0 });
+        liquidParticlesCount--;
+      }
+
+      // 색상 서서히 일반 인디고로 전이
+      gasParticles.forEach(p => {
+        if (p.color === '#34d399') {
+          p.color = '#6366f1'; 
+        }
+      });
+
+      // 3. 이벤트 화살표 애니메이션 진행
+      arrows.forEach((arr, idx) => {
+        arr.opacity -= 0.03;
+        if (arr.type === 'evaporate') arr.y -= 1.2;
+        else arr.y += 1.2;
+
+        if (arr.opacity <= 0) {
+          arrows.splice(idx, 1);
+        }
+      });
+
+      // 4. 데이터 계측 및 그래프 전송용 누적
+      const currentEvap = getEvapRate();
+      const currentCond = getCondRate();
+
+      graphData.push({ evap: currentEvap, cond: currentCond });
+      if (graphData.length > maxGraphHistory) {
+        graphData.shift();
+      }
+
+      // 화면 우측 인터페이스 실시간 동기화
+      document.getElementById('gas-count-display').innerText = gasParticles.length;
+      document.getElementById('liquid-count-display').innerText = Math.max(0, liquidParticlesCount);
+      
+      const density = (gasParticles.length / getVolumeArea() * 100).toFixed(2);
+      document.getElementById('density-display').innerText = density;
+
+      // 평형 상태 여부 판단 뱃지 업데이트
+      const statusBadge = document.getElementById('status-badge');
+      const diff = Math.abs(currentEvap - currentCond);
+      if (diff < 0.4) {
+        statusBadge.innerText = "동적 평형 상태 (v증발 = v응축)";
+        statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+      } else if (currentEvap > currentCond) {
+        statusBadge.innerText = "동적 불평형 (증발 우세 ⬆️)";
+        statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+      } else {
+        statusBadge.innerText = "동적 불평형 (응축 우세 ⬇️)";
+        statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30";
+      }
+    }
+
+    // --- 시뮬레이션 및 그래프 그리기 담당 ---
+    function drawAll() {
+      // 1. 실린더 내부 그리기
+      simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+      const pistonY = getPistonY();
+      const liquidY = getLiquidY();
+
+      // 유리 실린더 외곽 벽면 가이드라인
+      simCtx.strokeStyle = '#475569';
+      simCtx.lineWidth = 6;
+      simCtx.lineCap = 'round';
+      simCtx.beginPath();
+      simCtx.moveTo(25, 30);
+      simCtx.lineTo(25, 330);
+      simCtx.lineTo(simCanvas.width - 25, 330);
+      simCtx.lineTo(simCanvas.width - 25, 30);
+      simCtx.stroke();
+
+      // 액체 물 채우기
+      simCtx.fillStyle = 'rgba(59, 130, 246, 0.25)'; // 부드러운 파란색 물결
+      simCtx.fillRect(28, liquidY, simCanvas.width - 56, 327 - liquidY);
+      
+      // 물 수면 라인 경계
+      simCtx.strokeStyle = '#3b82f6';
+      simCtx.lineWidth = 3;
+      simCtx.beginPath();
+      simCtx.moveTo(28, liquidY);
+      simCtx.lineTo(simCanvas.width - 28, liquidY);
+      simCtx.stroke();
+
+      // 피스톤 메탈 판 렌더링
+      simCtx.fillStyle = '#cbd5e1';
+      simCtx.fillRect(28, pistonY - 15, simCanvas.width - 56, 15);
+      // 피스톤 중앙 기둥
+      simCtx.fillStyle = '#94a3b8';
+      simCtx.fillRect(simCanvas.width/2 - 10, 10, 20, pistonY - 15);
+
+      // 실린더 내부 입자 그리기
+      gasParticles.forEach(p => {
+        simCtx.fillStyle = p.color;
+        simCtx.shadowColor = p.color;
+        simCtx.shadowBlur = p.color === '#34d399' ? 8 : 0; // 방금 증발한 입자는 발광 효과
+        simCtx.beginPath();
+        simCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        simCtx.fill();
+        simCtx.shadowBlur = 0; // 그림자 초기화
+      });
+
+      // 화살표 이벤트 가시화 그리기
+      arrows.forEach(arr => {
+        simCtx.strokeStyle = arr.type === 'evaporate' ? `rgba(52, 211, 153, ${arr.opacity})` : `rgba(244, 63, 94, ${arr.opacity})`;
+        simCtx.lineWidth = 2;
+        simCtx.beginPath();
+        if (arr.type === 'evaporate') {
+          // 위 방향 화살표
+          simCtx.moveTo(arr.x, arr.y);
+          simCtx.lineTo(arr.x, arr.y - 12);
+          simCtx.lineTo(arr.x - 4, arr.y - 8);
+          simCtx.moveTo(arr.x, arr.y - 12);
+          simCtx.lineTo(arr.x + 4, arr.y - 8);
+        } else {
+          // 아래 방향 화살표
+          simCtx.moveTo(arr.x, arr.y);
+          simCtx.lineTo(arr.x, arr.y + 12);
+          simCtx.lineTo(arr.x - 4, arr.y + 8);
+          simCtx.moveTo(arr.x, arr.y + 12);
+          simCtx.lineTo(arr.x + 4, arr.y + 8);
+        }
+        simCtx.stroke();
+      });
+
+      // 2. 실시간 그래프 그리기
+      drawGraph();
+    }
+
+    function drawGraph() {
+      graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+      const width = graphCanvas.width;
+      const height = graphCanvas.height;
+
+      // 격자 가이드 라인 그리기
+      graphCtx.strokeStyle = '#f1f5f9';
+      graphCtx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) {
+        let y = (height / 4) * i;
+        graphCtx.beginPath();
+        graphCtx.moveTo(40, y);
+        graphCtx.lineTo(width - 20, y);
+        graphCtx.stroke();
+      }
+
+      // 축 레이블 및 텍스트 설정
+      graphCtx.fillStyle = '#94a3b8';
+      graphCtx.font = '10px sans-serif';
+      graphCtx.textAlign = 'right';
+      graphCtx.fillText("속도(v)", 35, 15);
+      graphCtx.fillText("시간(t)", width - 10, height - 5);
+
+      // 그래프 시작 경계축선 그리기
+      graphCtx.strokeStyle = '#cbd5e1';
+      graphCtx.lineWidth = 1.5;
+      graphCtx.beginPath();
+      graphCtx.moveTo(40, 10);
+      graphCtx.lineTo(40, height - 20);
+      graphCtx.lineTo(width - 10, height - 20);
+      graphCtx.stroke();
+
+      if (graphData.length < 2) return;
+
+      const scaleY = 12; // 수치 확대율
+      const startX = 40;
+      const endX = width - 20;
+      const stepX = (endX - startX) / (maxGraphHistory - 1);
+
+      // 증발 속도 곡선 (녹색) 그리기
+      graphCtx.strokeStyle = '#10b981';
+      graphCtx.lineWidth = 2.5;
+      graphCtx.beginPath();
+      graphData.forEach((d, i) => {
+        let lx = startX + i * stepX;
+        let ly = height - 20 - (d.evap * scaleY);
+        if (i === 0) graphCtx.moveTo(lx, ly);
+        else graphCtx.lineTo(lx, ly);
+      });
+      graphCtx.stroke();
+
+      // 응축 속도 곡선 (적색) 그리기
+      graphCtx.strokeStyle = '#f43f5e';
+      graphCtx.lineWidth = 2.5;
+      graphCtx.beginPath();
+      graphData.forEach((d, i) => {
+        let lx = startX + i * stepX;
+        let ly = height - 20 - (d.cond * scaleY);
+        // 그래프 밖으로 탈출하는 것 방지
+        ly = Math.max(10, Math.min(height - 20, ly));
+        
+        if (i === 0) graphCtx.moveTo(lx, ly);
+        else graphCtx.lineTo(lx, ly);
+      });
+      graphCtx.stroke();
+    }
+  </script>
+</body>
+</html>
